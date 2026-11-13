@@ -645,8 +645,53 @@ function scenePicker() {
     return h('div', { class: 'frm' }, q, grid);
   }, [[t('cancel'), null]]);
 }
-function ctlBar(k) {
-  const S = MP[k], M = D.media[k], id = x => k + '-' + x;
+// function ctlBar(k) {
+//   const S = MP[k], M = D.media[k], id = x => k + '-' + x;
+//   const step = d => () => { if (M.list.length) playIdx(k, (Math.max(M.i, 0) + d + M.list.length) % M.list.length); };
+//   const skip = s => () => { if (S.el) S.el.currentTime = Math.max(0, Math.min(S.el.duration || 1e9, S.el.currentTime + s)); };
+//   const seek = h('input', { id: id('seek'), class: 'seek', type: 'range', min: 0, max: 0, step: 'any', value: 0,
+//     oninput: e => { S.seeking = true; $('#' + id('cur')).textContent = fmtT(e.target.value); e.target.style.setProperty('--p', (+e.target.max ? e.target.value / e.target.max * 100 : 0) + '%'); },
+//     onchange: e => { if (S.el) S.el.currentTime = +e.target.value; S.seeking = false; } });
+//   const tip = h('span', { class: 'tip' }), sw = h('div', { class: 'seekw' }, seek, tip);
+//   seek.addEventListener('mousemove', e => { const r = seek.getBoundingClientRect(), f = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)); tip.textContent = fmtT(f * (S.el && isFinite(S.el.duration) ? S.el.duration : 0)); tip.style.left = (f * 100) + '%'; });
+//   const vol = h('input', { class: 'seek vol', type: 'range', min: 0, max: 1, step: 0.02, value: S.vol == null ? 1 : S.vol, oninput: e => { S.vol = +e.target.value; if (S.el) { S.el.volume = S.vol; S.el.muted = false; } e.target.style.setProperty('--p', S.vol * 100 + '%'); } });
+//   vol.style.setProperty('--p', (S.vol == null ? 1 : S.vol) * 100 + '%');
+//   const toggle = () => { if (!S.el) { if (M.list.length) playIdx(k, Math.max(M.i, 0)); } else if (S.el.paused) S.el.play(); else S.el.pause(); };
+//   const speedMenu = e => popMenu(e, [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(x => [((S.rate || 1) === x ? '● ' : '○ ') + x + '×', () => { S.rate = x; if (S.el) S.el.playbackRate = x; updUI(k); }]));
+//   const subMenu = e => popMenu(e, [[(S.sub < 0 ? '● ' : '○ ') + t('sub_off'), () => setSub(S, -1)], ...S.subs.map((x, i) => [(S.sub === i ? '● ' : '○ ') + x.label, () => setSub(S, i)]), [t('sub_load'), loadSubFile], ...(S.msg ? [['ⓘ ' + S.msg, () => {}]] : [])]);
+//   const sleepMenu = e => popMenu(e, [['✕', () => setSleep(0)], ...[15, 30, 45, 60, 90].map(m => [m + ' min', () => setSleep(m)])]);
+//   const mute = () => { if (S.el) { S.el.muted = !S.el.muted; updUI(k); } };
+//   const pip = () => { if (S.el && S.el.requestPictureInPicture) S.el.requestPictureInPicture().catch(() => {}); };
+//   const repBtn = () => ib(ICO.rep, () => { S.rep = !S.rep ? 'all' : S.rep === 'all' ? 'one' : ''; render(); }, S.rep ? 'on' : '', null, S.rep === 'one' ? t('rep_one') : S.rep === 'all' ? t('rep_all') : t('rep_off'));
+//   const cur = h('span', { id: id('cur'), class: 'tm' }, '0:00'), tot = h('span', { id: id('tot'), class: 'tm' }, '0:00');
+//   const left = h('span', { id: id('left'), class: 'pill' }), end = h('span', { id: id('end'), class: 'pill' });
+//   const spd = h('button', { class: 'pillb', id: id('spd'), onclick: speedMenu }, (S.rate || 1) + '×');
+//   const fsId = k === 'video' ? 'vw' : 'ap';
+//   if (k === 'video') {
+//     return h('div', { class: 'ctl vc' }, sw,
+//       h('div', { class: 'brow' }, h('div', { class: 'grp' }, ib(ICO.prev, step(-1), '', null, 'Prev'), ib(ICO.play, toggle, 'big', id('play'), 'Space'), ib(ICO.next, step(1), '', null, 'Next'), ib(ICO.back, skip(-10), '', null, '-10s'), ib(ICO.fwd, skip(10), '', null, '+10s')),
+//         h('div', { class: 'grp volw' }, ib(ICO.vol, mute, '', id('mute')), vol), h('span', { class: 'tmx' }, cur, ' / ', tot), h('span', { class: 'sp' }), left, end,
+//         h('div', { class: 'grp' }, ib(ICO.cc, subMenu, S.subs.length ? 'on' : '', null, t('sub_l')), spd, ib(ICO.pip, pip, '', null, 'PiP'), repBtn(), ib(ICO.moon, sleepMenu), ib(ICO.fs, () => toggleFsEl(fsId), '', null, 'F'))));
+//   }
+//   const style = D.s.mstyle || 'ring', fsB = ib(ICO.fs, () => toggleFsEl(fsId), '', null, 'F'), moonB = ib(ICO.moon, sleepMenu, '', null, 'Sleep'), playB = ib(ICO.play, toggle, 'big', id('play'), 'Space');
+//   const shufB = ib(ICO.shuf, () => { S.shuf = !S.shuf; render(); }, S.shuf ? 'on' : '', null, t('shuf'));
+//   const sceneBtn = ib(ICO.scene, () => scenePicker(), '', null, t('fx_l'));
+//   // const pick = i => () => { D.s.fx = i; save(); render(); };
+//   // const sceneBtn = ib(ICO.scene, e => popMenu(e, [[(D.s.fx === -2 ? '● ' : '○ ') + t('fx_auto'), pick(-2)], [(D.s.fx === -1 ? '● ' : '○ ') + t('fx_off'), pick(-1)], ...Array.from({ length: SENFX.count }, (_, i) => [(D.s.fx === i ? '● ' : '○ ') + fxName(i), pick(i)])]), '', null, t('fx_l'));
+//   const styleBtn = ib(ICO.style, e => popMenu(e, ['ring', 'neon', 'bar', 'pill', 'minimal'].map(x => [(style === x ? '● ' : '○ ') + t('ms_' + x), () => { D.s.mstyle = x; save(); render(); }])), '', null, t('ms_l'));
+//   if (style === 'bar' || style === 'pill' || style === 'minimal') {
+//     return h('div', { class: 'ctl mc row1 ' + style }, h('div', { class: 'grp' }, ib(ICO.prev, step(-1)), playB, ib(ICO.next, step(1))), cur, sw, tot,
+//       h('div', { class: 'grp volw' }, ib(ICO.vol, mute, '', id('mute')), vol), h('div', { class: 'grp' }, shufB, repBtn(), spd, moonB, sceneBtn, styleBtn, fsB), left, end);
+//   }
+//   const ring = h('div', { class: 'playw', html: `<svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="36" class="rt"/><circle cx="40" cy="40" r="36" class="rf" id="${id('ring')}"/></svg>` });
+//   ring.append(playB);
+//   return h('div', { class: 'ctl mc ' + style }, h('div', { class: 'trow' }, cur, sw, tot), h('div', { class: 'trow2' }, left, end),
+//     h('div', { class: 'mrow' }, h('div', { class: 'grp' }, ib(ICO.vol, mute, '', id('mute')), vol),
+//       h('div', { class: 'grp cen' }, shufB, ib(ICO.prev, step(-1)), ib(ICO.back, skip(-10)), ring, ib(ICO.fwd, skip(10)), ib(ICO.next, step(1)), repBtn()),
+//       h('div', { class: 'grp' }, spd, moonB, sceneBtn, styleBtn, fsB)));
+// }
+  function ctlBar(k) {
+  const S = MP[k], M = D.media[k], id = x => k + '-' + x, isV = k === 'video';
   const step = d => () => { if (M.list.length) playIdx(k, (Math.max(M.i, 0) + d + M.list.length) % M.list.length); };
   const skip = s => () => { if (S.el) S.el.currentTime = Math.max(0, Math.min(S.el.duration || 1e9, S.el.currentTime + s)); };
   const seek = h('input', { id: id('seek'), class: 'seek', type: 'range', min: 0, max: 0, step: 'any', value: 0,
@@ -666,29 +711,22 @@ function ctlBar(k) {
   const cur = h('span', { id: id('cur'), class: 'tm' }, '0:00'), tot = h('span', { id: id('tot'), class: 'tm' }, '0:00');
   const left = h('span', { id: id('left'), class: 'pill' }), end = h('span', { id: id('end'), class: 'pill' });
   const spd = h('button', { class: 'pillb', id: id('spd'), onclick: speedMenu }, (S.rate || 1) + '×');
-  const fsId = k === 'video' ? 'vw' : 'ap';
-  if (k === 'video') {
-    return h('div', { class: 'ctl vc' }, sw,
-      h('div', { class: 'brow' }, h('div', { class: 'grp' }, ib(ICO.prev, step(-1), '', null, 'Prev'), ib(ICO.play, toggle, 'big', id('play'), 'Space'), ib(ICO.next, step(1), '', null, 'Next'), ib(ICO.back, skip(-10), '', null, '-10s'), ib(ICO.fwd, skip(10), '', null, '+10s')),
-        h('div', { class: 'grp volw' }, ib(ICO.vol, mute, '', id('mute')), vol), h('span', { class: 'tmx' }, cur, ' / ', tot), h('span', { class: 'sp' }), left, end,
-        h('div', { class: 'grp' }, ib(ICO.cc, subMenu, S.subs.length ? 'on' : '', null, t('sub_l')), spd, ib(ICO.pip, pip, '', null, 'PiP'), repBtn(), ib(ICO.moon, sleepMenu), ib(ICO.fs, () => toggleFsEl(fsId), '', null, 'F'))));
-  }
-  const style = D.s.mstyle || 'ring', fsB = ib(ICO.fs, () => toggleFsEl(fsId), '', null, 'F'), moonB = ib(ICO.moon, sleepMenu, '', null, 'Sleep'), playB = ib(ICO.play, toggle, 'big', id('play'), 'Space');
-  const shufB = ib(ICO.shuf, () => { S.shuf = !S.shuf; render(); }, S.shuf ? 'on' : '', null, t('shuf'));
+  const fsId = isV ? 'vw' : 'ap';
+  const playB = ib(ICO.play, toggle, 'big', id('play'), 'Space');
+  const fsB = ib(ICO.fs, () => toggleFsEl(fsId), '', null, 'F');
+  const moonB = ib(ICO.moon, sleepMenu, '', null, 'Sleep');
+  const shufB = ib(ICO.shuf, () => { S.shuf = !S.shuf; render(); }, S.shuf ? 'on' : '', null, 'Shuffle');
   const sceneBtn = ib(ICO.scene, () => scenePicker(), '', null, t('fx_l'));
-  // const pick = i => () => { D.s.fx = i; save(); render(); };
-  // const sceneBtn = ib(ICO.scene, e => popMenu(e, [[(D.s.fx === -2 ? '● ' : '○ ') + t('fx_auto'), pick(-2)], [(D.s.fx === -1 ? '● ' : '○ ') + t('fx_off'), pick(-1)], ...Array.from({ length: SENFX.count }, (_, i) => [(D.s.fx === i ? '● ' : '○ ') + fxName(i), pick(i)])]), '', null, t('fx_l'));
-  const styleBtn = ib(ICO.style, e => popMenu(e, ['ring', 'neon', 'bar', 'pill', 'minimal'].map(x => [(style === x ? '● ' : '○ ') + t('ms_' + x), () => { D.s.mstyle = x; save(); render(); }])), '', null, t('ms_l'));
-  if (style === 'bar' || style === 'pill' || style === 'minimal') {
-    return h('div', { class: 'ctl mc row1 ' + style }, h('div', { class: 'grp' }, ib(ICO.prev, step(-1)), playB, ib(ICO.next, step(1))), cur, sw, tot,
-      h('div', { class: 'grp volw' }, ib(ICO.vol, mute, '', id('mute')), vol), h('div', { class: 'grp' }, shufB, repBtn(), spd, moonB, sceneBtn, styleBtn, fsB), left, end);
-  }
-  const ring = h('div', { class: 'playw', html: `<svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="36" class="rt"/><circle cx="40" cy="40" r="36" class="rf" id="${id('ring')}"/></svg>` });
-  ring.append(playB);
-  return h('div', { class: 'ctl mc ' + style }, h('div', { class: 'trow' }, cur, sw, tot), h('div', { class: 'trow2' }, left, end),
-    h('div', { class: 'mrow' }, h('div', { class: 'grp' }, ib(ICO.vol, mute, '', id('mute')), vol),
-      h('div', { class: 'grp cen' }, shufB, ib(ICO.prev, step(-1)), ib(ICO.back, skip(-10)), ring, ib(ICO.fwd, skip(10)), ib(ICO.next, step(1)), repBtn()),
-      h('div', { class: 'grp' }, spd, moonB, sceneBtn, styleBtn, fsB)));
+  // ویدئو: زیرنویس و تصویر در تصویر دارد. موزیک: شافل و صحنه دارد.
+  const right = isV
+    ? [ib(ICO.cc, subMenu, S.subs.length ? 'on' : '', null, t('sub_l')), spd, ib(ICO.pip, pip, '', null, 'PiP'), repBtn(), moonB, fsB]
+    : [spd, shufB, repBtn(), moonB, sceneBtn, fsB];
+  return h('div', { class: 'ctl vc' + (isV ? '' : ' mus') }, sw,
+    h('div', { class: 'brow' },
+      h('div', { class: 'grp' }, ib(ICO.prev, step(-1), '', null, 'Prev'), playB, ib(ICO.next, step(1), '', null, 'Next'), ib(ICO.back, skip(-10), '', null, '-10s'), ib(ICO.fwd, skip(10), '', null, '+10s')),
+      h('div', { class: 'grp volw' }, ib(ICO.vol, mute, '', id('mute')), vol),
+      h('span', { class: 'tmx' }, cur, ' / ', tot), h('span', { class: 'sp' }), left, end,
+      h('div', { class: 'grp' }, ...right)));
 }
 function toggleFsEl(id) { const w = document.getElementById(id); if (document.fullscreenElement) document.exitFullscreen(); else if (w) w.requestFullscreen(); }
 function autoHide(el) {
