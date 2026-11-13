@@ -298,3 +298,22 @@ main.anm{padding:10px 14px;overflow-x:hidden;overflow-y:auto}
 .an-btn,.an-sel{height:34px;padding:0 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--tx) 18%,transparent);background:color-mix(in srgb,var(--tx) 8%,transparent);color:var(--tx);font:inherit;font-size:13px;cursor:pointer}
 .an-btn:hover,.an-sel:hover{background:color-mix(in srgb,var(--tx) 16%,transparent)}
 @media (max-width:620px){.an-body{flex-direction:column}.an-stage{flex:none;width:100%;height:190px}.an-tl{grid-template-columns:repeat(3,1fr)}}
+/* ===== کنترل‌های ویدئو و موزیک: چیدمان یکسان ===== */
+.ctl.vc{display:flex;flex-direction:column;gap:8px;padding:10px 14px 12px;color:var(--tx);user-select:none}
+.ctl.vc .brow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ctl.vc .grp{display:flex;align-items:center;gap:4px}
+.ctl.vc .rb{width:36px;height:36px;min-width:36px;border:0;border-radius:50%;display:inline-grid;place-items:center;padding:0;background:transparent;color:var(--tx);opacity:.85;cursor:pointer;transition:background .15s,opacity .15s,transform .15s}
+.ctl.vc .rb:hover{opacity:1;background:color-mix(in srgb,var(--tx) 14%,transparent)}
+.ctl.vc .rb:active{transform:scale(.92)}
+.ctl.vc .rb svg{width:20px;height:20px;display:block}
+.ctl.vc .rb.big{width:46px;height:46px;min-width:46px;background:var(--ac);color:var(--actx,#fff);opacity:1;box-shadow:0 6px 18px -6px var(--ac)}
+.ctl.vc .rb.big:hover{background:var(--ac);filter:brightness(1.1)}
+.ctl.vc .rb.big svg{width:22px;height:22px}
+.ctl.vc .rb.on{background:color-mix(in srgb,var(--ac) 22%,transparent);color:var(--ac);opacity:1}
+.ctl.vc .volw{gap:6px}
+.ctl.vc .volw .vol{width:96px;flex:0 0 96px}
+.ctl.vc .sp{flex:1}
+.ctl.vc .tmx{font-variant-numeric:tabular-nums;font-size:13px;white-space:nowrap;opacity:.9}
+.ctl.vc .pill{font-size:12px;opacity:.7;white-space:nowrap}
+.ctl.vc .pillb{height:30px;padding:0 10px;border-radius:999px;border:1px solid color-mix(in srgb,var(--tx) 18%,transparent);background:transparent;color:var(--tx);font:inherit;font-size:12px;cursor:pointer}
+.ctl.vc .pillb:hover{background:color-mix(in srgb,var(--tx) 12%,transparent)}
