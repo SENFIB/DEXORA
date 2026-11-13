@@ -630,6 +630,21 @@ function popMenu(e, A) {
 }
 const SLEEP = { t: 0 };
 function setSleep(m) { clearTimeout(SLEEP.t); if (m) { SLEEP.t = setTimeout(() => { ['music', 'video'].forEach(k => { if (MP[k].el) MP[k].el.pause(); }); toast('🌙'); }, m * 60000); toast('🌙 ' + m + ' min'); } else toast('🌙 ✕'); }
+function scenePicker() {
+  return modal(t('fx_l'), close => {
+    const q = h('input', { placeholder: t('search') }), grid = h('div', { class: 'scg' });
+    const pick = i => { D.s.fx = i; save(); close(null); render(); };
+    const draw = () => {
+      const f = q.value.trim().toLowerCase(), out = [];
+      const put = (i, label) => { if (!f || label.toLowerCase().includes(f)) out.push(h('button', { class: 'sc' + (D.s.fx === i ? ' on' : ''), onclick: () => pick(i) }, label)); };
+      put(-2, t('fx_auto')); put(-1, t('fx_off'));
+      for (let i = 0; i < SENFX.count; i++) put(i, fxName(i));
+      grid.replaceChildren(...out);
+    };
+    q.oninput = draw; draw();
+    return h('div', { class: 'frm' }, q, grid);
+  }, [[t('cancel'), null]]);
+}
 function ctlBar(k) {
   const S = MP[k], M = D.media[k], id = x => k + '-' + x;
   const step = d => () => { if (M.list.length) playIdx(k, (Math.max(M.i, 0) + d + M.list.length) % M.list.length); };
@@ -660,8 +675,9 @@ function ctlBar(k) {
   }
   const style = D.s.mstyle || 'ring', fsB = ib(ICO.fs, () => toggleFsEl(fsId), '', null, 'F'), moonB = ib(ICO.moon, sleepMenu, '', null, 'Sleep'), playB = ib(ICO.play, toggle, 'big', id('play'), 'Space');
   const shufB = ib(ICO.shuf, () => { S.shuf = !S.shuf; render(); }, S.shuf ? 'on' : '', null, t('shuf'));
-  const pick = i => () => { D.s.fx = i; save(); render(); };
-  const sceneBtn = ib(ICO.scene, e => popMenu(e, [[(D.s.fx === -2 ? '● ' : '○ ') + t('fx_auto'), pick(-2)], [(D.s.fx === -1 ? '● ' : '○ ') + t('fx_off'), pick(-1)], ...Array.from({ length: SENFX.count }, (_, i) => [(D.s.fx === i ? '● ' : '○ ') + fxName(i), pick(i)])]), '', null, t('fx_l'));
+  const sceneBtn = ib(ICO.scene, () => scenePicker(), '', null, t('fx_l'));
+  // const pick = i => () => { D.s.fx = i; save(); render(); };
+  // const sceneBtn = ib(ICO.scene, e => popMenu(e, [[(D.s.fx === -2 ? '● ' : '○ ') + t('fx_auto'), pick(-2)], [(D.s.fx === -1 ? '● ' : '○ ') + t('fx_off'), pick(-1)], ...Array.from({ length: SENFX.count }, (_, i) => [(D.s.fx === i ? '● ' : '○ ') + fxName(i), pick(i)])]), '', null, t('fx_l'));
   const styleBtn = ib(ICO.style, e => popMenu(e, ['ring', 'neon', 'bar', 'pill', 'minimal'].map(x => [(style === x ? '● ' : '○ ') + t('ms_' + x), () => { D.s.mstyle = x; save(); render(); }])), '', null, t('ms_l'));
   if (style === 'bar' || style === 'pill' || style === 'minimal') {
     return h('div', { class: 'ctl mc row1 ' + style }, h('div', { class: 'grp' }, ib(ICO.prev, step(-1)), playB, ib(ICO.next, step(1))), cur, sw, tot,
