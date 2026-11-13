@@ -1,0 +1,86 @@
+{
+  "name": "sen-launcher",
+  "version": "1.0.0",
+  "description": "SEN Launcher - customizable Windows application launcher",
+  "main": "main.js",
+  "author": "SEN",
+  "license": "MIT",
+  "scripts": {
+    "icon": "python scripts/make_icon.py",
+    "start": "electron .",
+    "dist": "electron-builder --win nsis --publish never"
+  },
+  "dependencies": {
+    "systeminformation": "^5.23.5",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.sen.launcher",
+    "productName": "SEN Launcher",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "dm.js",
+      "gsync.js",
+      "preload.js",
+      "renderer/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "artifactName": "SEN-Launcher-Setup-${version}.${ext}",
+      "include": "build/installer.nsh"
+    },
+    "asarUnpack": [
+      "node_modules/@ffmpeg-installer/**/*"
+    ],
+    "fileAssociations": [
+      {
+        "ext": [
+          "mp4",
+          "mkv",
+          "avi",
+          "mov",
+          "webm",
+          "wmv",
+          "m4v"
+        ],
+        "name": "Video",
+        "description": "Video file",
+        "role": "Viewer"
+      },
+      {
+        "ext": [
+          "mp3",
+          "flac",
+          "wav",
+          "ogg",
+          "m4a",
+          "aac",
+          "opus"
+        ],
+        "name": "Audio",
+        "description": "Audio file",
+        "role": "Viewer"
+      }
+    ]
+  }
+}
