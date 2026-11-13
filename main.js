@@ -5,7 +5,7 @@ if (!app.requestSingleInstanceLock()) app.quit();
 app.commandLine.appendSwitch('disable-features', 'Translate,MediaRouter,AutofillServerCommunication,OptimizationHints,CalculateNativeWinOcclusion');
 app.commandLine.appendSwitch('disable-component-update'); app.commandLine.appendSwitch('no-pings'); app.commandLine.appendSwitch('disable-background-networking');
 
-let win, tray, quitting = false, toTray = true, timer = null, tick = 0, gpuCache = null, busy = false, interval = 2000;
+let win, tray, quitting = false, toTray = true, timer = null, busy = false, interval = 2000;
 const U = () => app.getPath('userData');
 const F = () => path.join(U(), 'sen-data.json');
 const log = m => { try { fs.appendFileSync(path.join(U(), 'sen.log'), `${new Date().toISOString()} ${m}\n`); } catch {} };
@@ -120,13 +120,14 @@ ipcMain.handle('json:open', async () => {
   try { return JSON.parse(fs.readFileSync(r.filePaths[0], 'utf8')); } catch { return { __error: 1 }; }
 });
 ipcMain.handle('json:save', async (_, d) => {
-  const r = await dialog.showSaveDialog(win, { defaultPath: 'sen-launcher-backup.json' });
+  const r = await dialog.showSaveDialog(win, { defaultPath: 'dexora-backup.json' });
   if (r.canceled) return false; fs.writeFileSync(r.filePath, JSON.stringify(d, null, 2)); return true;
 });
 ipcMain.handle('prefs', (_, p) => { toTray = !!p.tray; app.setLoginItemSettings({ openAtLogin: !!p.autostart }); return true; });
 ipcMain.handle('opendate', () => ext('ms-settings:dateandtime'));
+ipcMain.handle('app:title', (_, title) => { const t = String(title || 'DEXORA').trim() || 'DEXORA'; if (win && !win.isDestroyed()) win.setTitle(t); if (tray) { try { tray.setToolTip(t); } catch {} } return true; });
 
-// ---- hardware monitor (only real values; null => UI shows N/A) ----
+// ---- hardware monitor ----
 ipcMain.handle('mon:static', async () => {
   const g = await si.graphics().catch(() => null);
   return { cpu: (require('os').cpus()[0] || {}).model || null, gpu: g && g.controllers[0] ? g.controllers[0].model : null };
@@ -152,7 +153,7 @@ async function sample() {
 }
 ipcMain.handle('mon:cfg', (_, ms, s) => { interval = Math.max(1500, ms | 0); if (s) sens = { ...sens, ...s }; clearInterval(timer); timer = setInterval(sample, interval); sample(); return true; });
 
-// ---------- media helpers (subtitles via bundled ffmpeg; text subtitles only) ----------
+// ---------- media helpers ----------
 const MEDIA = { video: ['.mp4', '.mkv', '.webm', '.avi', '.mov', '.m4v', '.wmv', '.ts', '.mpg', '.mpeg'], music: ['.mp3', '.flac', '.wav', '.ogg', '.m4a', '.aac', '.opus', '.wma'] };
 let FF = null;
 try { FF = require('@ffmpeg-installer/ffmpeg').path.replace('app.asar' + path.sep, 'app.asar.unpacked' + path.sep); if (!fs.existsSync(FF)) FF = null; } catch (e) { log('ffmpeg ' + e.message); }
@@ -265,14 +266,14 @@ ipcMain.handle('icon:app', async (_, id) => {
   } catch { return null; }
 });
 
-// ---------- location (Windows Location service) + web data ----------
+// ---------- location + web data ----------
 const GEO = "Add-Type -AssemblyName System.Device; $w=New-Object System.Device.Location.GeoCoordinateWatcher; [void]$w.TryStart($false,[TimeSpan]::FromSeconds(8)); $p=$w.Position.Location; if($p.IsUnknown){'unknown'}else{[string]::Format([Globalization.CultureInfo]::InvariantCulture,'{0},{1}',$p.Latitude,$p.Longitude)}";
 ipcMain.handle('geo:get', async () => { const o = await psRun(GEO, 16000), m = /(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/.exec(o); return m ? { lat: +m[1], lon: +m[2] } : null; });
 const NETOK = ['api.open-meteo.com', 'geocoding-api.open-meteo.com', 'air-quality-api.open-meteo.com', 'nominatim.openstreetmap.org', 'ipwho.is'];
 ipcMain.handle('net:json', async (_, url) => {
   try {
     const u = new URL(url); if (u.protocol !== 'https:' || !NETOK.includes(u.hostname)) return { error: 'blocked' };
-    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 12000), r = await fetch(url, { signal: ctl.signal, headers: { 'User-Agent': 'SEN-Launcher/1.0 (Windows desktop app)' } }); clearTimeout(tm);
+    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 12000), r = await fetch(url, { signal: ctl.signal, headers: { 'User-Agent': 'DEXORA/2.0 (Windows desktop app)' } }); clearTimeout(tm);
     return r.ok ? { data: await r.json() } : { error: 'http ' + r.status };
   } catch (e) { return { error: e.message }; }
 });
@@ -308,7 +309,7 @@ function hook(s) {
 }
 const hooked = new Set(['persist:sen-web', 'sen-private']);
 ipcMain.handle('br:part', (_, p) => { if (!hooked.has(p)) { hooked.add(p); hook(session.fromPartition(p)); } return true; });
-ipcMain.handle('br:shot', (_, du) => { const dir = path.join(app.getPath('pictures'), 'SEN'); fs.mkdirSync(dir, { recursive: true }); const f = path.join(dir, 'shot-' + Date.now() + '.png'); fs.writeFileSync(f, Buffer.from(String(du).split(',')[1], 'base64')); return f; });
+ipcMain.handle('br:shot', (_, du) => { const dir = path.join(app.getPath('pictures'), 'DEXORA'); fs.mkdirSync(dir, { recursive: true }); const f = path.join(dir, 'shot-' + Date.now() + '.png'); fs.writeFileSync(f, Buffer.from(String(du).split(',')[1], 'base64')); return f; });
 ipcMain.handle('fs:list', (_, p) => {
   try {
     const items = fs.readdirSync(p, { withFileTypes: true }).slice(0, 4000).map(e => { let s = null; try { s = fs.statSync(path.join(p, e.name)); } catch {} return { n: e.name, d: e.isDirectory() || !!(s && s.isDirectory()), s: s && !s.isDirectory() ? s.size : 0, m: s ? s.mtimeMs : 0 }; });
@@ -324,26 +325,28 @@ app.on('web-contents-created', (_, wc) => {
   if (wc.getType() === 'webview') wc.setWindowOpenHandler(({ url }) => { if (win) win.webContents.send('br:open', url); return { action: 'deny' }; });
 });
 
-
-// ---------- market data for the Analysis tab (Binance / Yahoo Finance / news RSS / economic calendar / tgju) ----------
+// ---------- market data + LIVE streaming engine for Analysis tab ----------
 const MKHOST = ['api.binance.com', 'data-api.binance.vision', 'query1.finance.yahoo.com', 'query2.finance.yahoo.com', 'news.google.com', 'nfs.faireconomy.media', 'call4.tgju.org', 'call.tgju.org'];
-async function getUrl(url, asText) {
+async function getUrl(url, asText, timeoutMs = 15000) {
   const u = new URL(url); if (u.protocol !== 'https:' || !MKHOST.includes(u.hostname)) throw new Error('blocked');
-  const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 15000);
-  try { const r = await fetch(url, { signal: ctl.signal, headers: { 'User-Agent': UA, Accept: '*/*' } }); if (!r.ok) throw new Error('HTTP ' + r.status); return asText ? await r.text() : await r.json(); } finally { clearTimeout(tm); }
+  const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), timeoutMs);
+  try { const r = await fetch(url, { signal: ctl.signal, headers: { 'User-Agent': UA, Accept: '*/*', 'Cache-Control': 'no-cache' } }); if (!r.ok) throw new Error('HTTP ' + r.status); return asText ? await r.text() : await r.json(); } finally { clearTimeout(tm); }
 }
 const YALIAS = { XAUUSD: 'XAUUSD=X', XAGUSD: 'XAGUSD=X', US30: '^DJI', NAS100: '^NDX', SPX500: '^GSPC', US500: '^GSPC', GER40: '^GDAXI', UK100: '^FTSE', JP225: '^N225', USOIL: 'CL=F', WTI: 'CL=F', UKOIL: 'BZ=F', BRENT: 'BZ=F', DXY: 'DX-Y.NYB', XPTUSD: 'PL=F', NATGAS: 'NG=F', COPPER: 'HG=F' };
 const FIAT = ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'NZD', 'CAD', 'CHF', 'CNY', 'SEK', 'NOK', 'TRY', 'MXN', 'ZAR', 'SGD', 'HKD', 'INR', 'KRW', 'PLN', 'AED', 'SAR'];
 const ySym = s => YALIAS[s] || (/^[A-Z]{6}$/.test(s) && FIAT.includes(s.slice(0, 3)) && FIAT.includes(s.slice(3)) ? s + '=X' : /^[A-Z]{3,5}USD$/.test(s) && !FIAT.includes(s.slice(0, 3)) ? s.slice(0, -3) + '-USD' : s);
 const YIV = { '1m': ['1m', '5d'], '5m': ['5m', '1mo'], '15m': ['15m', '1mo'], '30m': ['30m', '1mo'], '1h': ['60m', '6mo'], '4h': ['60m', '1y'], '1d': ['1d', '2y'], '1w': ['1wk', '5y'] };
+const YSHORT = { '1m': ['1m', '1d'], '5m': ['5m', '5d'], '15m': ['15m', '5d'], '30m': ['30m', '5d'], '1h': ['60m', '5d'], '4h': ['60m', '1mo'], '1d': ['1d', '1mo'], '1w': ['1wk', '3mo'] };
+const isCryptoSym = s => /^[A-Z0-9]{2,10}(USDT|BUSD|USDC|FDUSD)$/.test(s);
 function agg(c, n) { const o = []; let cur = null; for (const x of c) { const k = Math.floor(x.t / (n * 3600000)); if (!cur || cur.k !== k) { cur = { k, t: x.t, o: x.o, h: x.h, l: x.l, c: x.c, v: x.v }; o.push(cur); } else { cur.h = Math.max(cur.h, x.h); cur.l = Math.min(cur.l, x.l); cur.c = x.c; cur.v += x.v; } } return o.map(({ t, o: a, h, l, c: z, v }) => ({ t, o: a, h, l, c: z, v })); }
+
 ipcMain.handle('mk:candles', async (_, symIn, tf) => {
   try {
     const sym = String(symIn).toUpperCase().replace(/[\s/_-]/g, '');
-    if (/^[A-Z0-9]{2,10}(USDT|BUSD|USDC|FDUSD)$/.test(sym)) {
+    if (isCryptoSym(sym)) {
       const iv = { '1w': '1w' }[tf] || tf;
-      for (const host of ['api.binance.com', 'data-api.binance.vision']) {
-        try { const j = await getUrl(`https://${host}/api/v3/klines?symbol=${sym}&interval=${iv}&limit=700`); return { src: 'Binance', sym, candles: j.map(k => ({ t: k[0], o: +k[1], h: +k[2], l: +k[3], c: +k[4], v: +k[5] })) }; } catch (e) { if (host === 'data-api.binance.vision') throw e; }
+      for (const host of ['data-api.binance.vision', 'api.binance.com']) {
+        try { const j = await getUrl(`https://${host}/api/v3/klines?symbol=${sym}&interval=${iv}&limit=700`); return { src: 'Binance', sym, candles: j.map(k => ({ t: k[0], o: +k[1], h: +k[2], l: +k[3], c: +k[4], v: +k[5] })) }; } catch (e) { if (host === 'api.binance.com') throw e; }
       }
     }
     const ys = ySym(sym), [iv, rg] = YIV[tf] || YIV['15m'];
@@ -351,16 +354,95 @@ ipcMain.handle('mk:candles', async (_, symIn, tf) => {
     const r = j.chart && j.chart.result && j.chart.result[0]; if (!r || !r.timestamp) throw new Error((j.chart && j.chart.error && j.chart.error.description) || 'no data');
     const q = r.indicators.quote[0]; let c = [];
     r.timestamp.forEach((t, i) => { if (q.open[i] != null && q.high[i] != null && q.low[i] != null && q.close[i] != null) c.push({ t: t * 1000, o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i], v: q.volume[i] || 0 }); });
-    if (tf === '4h') c = agg(c, 4); return { src: 'Yahoo Finance', sym: ys, candles: c.slice(-700) };
+    if (tf === '4h') c = agg(c, 4);
+    if (c.length && r.meta && typeof r.meta.regularMarketPrice === 'number' && isFinite(r.meta.regularMarketPrice)) {
+      const lb = c[c.length - 1], mp = r.meta.regularMarketPrice; lb.c = mp; lb.h = Math.max(lb.h, mp); lb.l = Math.min(lb.l, mp);
+    }
+    return { src: 'Yahoo Finance', sym: ys, candles: c.slice(-700) };
   } catch (e) { return { error: e.message }; }
 });
+
+// Live real-time candle stream (WebSocket + fast REST fallback)
+let subSeq = 0, subClean = null;
+function stopMkStream() { subSeq++; if (subClean) { try { subClean(); } catch {} subClean = null; } }
+ipcMain.handle('mk:unsub', () => { stopMkStream(); return true; });
+ipcMain.handle('mk:sub', (_, symIn, tf) => {
+  stopMkStream();
+  const seq = subSeq, sym = String(symIn || '').toUpperCase().replace(/[\s/_-]/g, '');
+  if (!sym) return false;
+  const emit = (bar, src) => { if (seq !== subSeq || !win || win.isDestroyed() || !win.isVisible() || win.isMinimized()) return; win.webContents.send('mk:tick', { sym, tf, bar, src, ts: Date.now() }); };
+  if (isCryptoSym(sym)) {
+    let ws = null, wsAt = 0, lastEmit = 0, pollBusy = false;
+    const tryWs = host => {
+      if (typeof WebSocket === 'undefined' || seq !== subSeq) return;
+      try {
+        ws = new WebSocket(`wss://${host}/ws/${sym.toLowerCase()}@kline_${tf}`);
+        ws.onmessage = ev => {
+          if (seq !== subSeq) return; wsAt = Date.now();
+          if (wsAt - lastEmit < 180) return; lastEmit = wsAt;
+          try { const d = JSON.parse(ev.data), k = d && d.k; if (k) emit({ t: k.t, o: +k.o, h: +k.h, l: +k.l, c: +k.c, v: +k.v }, 'Binance WS'); } catch {}
+        };
+        ws.onerror = () => { try { ws.close(); } catch {} };
+      } catch {}
+    };
+    tryWs('data-stream.binance.vision');
+    const iv = setInterval(async () => {
+      if (seq !== subSeq) return;
+      if (Date.now() - wsAt < 3500 || pollBusy || !win || !win.isVisible() || win.isMinimized()) return;
+      pollBusy = true;
+      for (const host of ['data-api.binance.vision', 'api.binance.com']) {
+        try {
+          const j = await getUrl(`https://${host}/api/v3/klines?symbol=${sym}&interval=${tf}&limit=2&_=${Date.now()}`, false, 6000);
+          if (Array.isArray(j) && j.length) { const k = j[j.length - 1]; emit({ t: k[0], o: +k[1], h: +k[2], l: +k[3], c: +k[4], v: +k[5] }, 'Binance Live'); break; }
+        } catch {}
+      }
+      pollBusy = false;
+    }, 2000);
+    subClean = () => { clearInterval(iv); if (ws) { try { ws.close(); } catch {} ws = null; } };
+  } else {
+    const ys = ySym(sym), [ivName, rg] = YSHORT[tf] || YSHORT['15m'];
+    let pollBusy = false;
+    const poll = async () => {
+      if (seq !== subSeq || pollBusy || !win || !win.isVisible() || win.isMinimized()) return;
+      pollBusy = true;
+      for (const host of ['query1.finance.yahoo.com', 'query2.finance.yahoo.com']) {
+        try {
+          const j = await getUrl(`https://${host}/v8/finance/chart/${encodeURIComponent(ys)}?interval=${ivName}&range=${rg}&includePrePost=false&_=${Date.now()}`, false, 7000);
+          const r = j.chart && j.chart.result && j.chart.result[0];
+          if (r && r.timestamp && r.timestamp.length) {
+            const q = r.indicators.quote[0]; let c = [];
+            const start = Math.max(0, r.timestamp.length - 16);
+            for (let i = start; i < r.timestamp.length; i++) {
+              if (q.open[i] != null && q.high[i] != null && q.low[i] != null && q.close[i] != null) c.push({ t: r.timestamp[i] * 1000, o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i], v: q.volume[i] || 0 });
+            }
+            if (tf === '4h') c = agg(c, 4);
+            if (c.length) {
+              const lb = { ...c[c.length - 1] };
+              if (r.meta && typeof r.meta.regularMarketPrice === 'number' && isFinite(r.meta.regularMarketPrice)) {
+                const mp = r.meta.regularMarketPrice; lb.c = mp; lb.h = Math.max(lb.h, mp); lb.l = Math.min(lb.l, mp);
+              }
+              emit(lb, 'Yahoo Live');
+            }
+            break;
+          }
+        } catch {}
+      }
+      pollBusy = false;
+    };
+    const tm = setInterval(poll, 2400);
+    setTimeout(poll, 900);
+    subClean = () => clearInterval(tm);
+  }
+  return true;
+});
+
 ipcMain.handle('mk:text', async (_, url) => { try { return { data: await getUrl(url, true) }; } catch (e) { return { error: e.message }; } });
 ipcMain.handle('mk:json', async (_, url) => { try { return { data: await getUrl(url, false) }; } catch (e) { return { error: e.message }; } });
 
 function create() {
   Menu.setApplicationMenu(null);
   win = new BrowserWindow({
-    width: 1280, height: 800, minWidth: 900, minHeight: 600, backgroundColor: '#111318', title: 'SEN Launcher',
+    width: 1280, height: 800, minWidth: 900, minHeight: 600, backgroundColor: '#111318', title: 'DEXORA',
     icon: path.join(__dirname, 'renderer', 'logo.png'),
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, webviewTag: true, spellcheck: false }
   });
@@ -370,8 +452,8 @@ function create() {
   win.on('close', e => { if (!quitting && toTray) { e.preventDefault(); win.hide(); } });
   try {
     tray = new Tray(nativeImage.createFromPath(path.join(__dirname, 'renderer', 'logo.png')).resize({ width: 16 }));
-    tray.setToolTip('SEN Launcher');
-    tray.setContextMenu(Menu.buildFromTemplate([{ label: 'Show', click: () => win.show() }, { label: 'Quit', click: () => { quitting = true; app.quit(); } }]));
+    tray.setToolTip('DEXORA');
+    tray.setContextMenu(Menu.buildFromTemplate([{ label: 'Show DEXORA', click: () => win.show() }, { label: 'Quit', click: () => { quitting = true; app.quit(); } }]));
     tray.on('click', () => win.show());
   } catch (e) { log('tray ' + e.message); }
 }
@@ -385,6 +467,6 @@ ipcMain.handle('app:ready', () => { rendererReady = true; pendingOpen.splice(0).
 ipcMain.handle('app:defaults', () => ext('ms-settings:defaultapps'));
 openArgs(process.argv);
 app.on('second-instance', (e, argv) => { if (win) { win.show(); win.focus(); } openArgs(argv); });
-app.on('before-quit', () => { quitting = true; });
-app.on('window-all-closed', () => app.quit());
+app.on('before-quit', () => { quitting = true; stopMkStream(); });
+app.on('window-all-closed', () => { stopMkStream(); app.quit(); });
 app.whenReady().then(() => { hook(session.fromPartition('persist:sen-web')); hook(session.fromPartition('sen-private')); create(); });
