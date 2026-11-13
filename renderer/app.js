@@ -681,7 +681,7 @@ function autoHide(el) {
   ['mousemove', 'mousedown', 'touchstart', 'keydown'].forEach(ev => el.addEventListener(ev, wake)); el.addEventListener('fullscreenchange', wake);
 }
 let FXSTOP = null;
-const fxName = i => t('fxn_' + SENFX.meta[i].k);
+const fxName = i => { const m = SENFX.meta[i], k = 'fxn_' + m.k; return T[k] ? t(k) : (m.name || m.k); };
 const dirOf = p => p.replace(/[\\/][^\\/]*$/, '');
 function removeGroup(k, d) { const M = D.media[k], cur = M.i >= 0 ? M.list[M.i] : null; savePos(k); M.list = M.list.filter(p => dirOf(p) !== d); if (cur && !M.list.includes(cur)) { stopEl(k); MP[k].pend = null; M.i = -1; } else M.i = cur ? M.list.indexOf(cur) : -1; save(); render(); }
 function plView(k) {
