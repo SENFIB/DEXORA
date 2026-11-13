@@ -267,3 +267,34 @@ main.anm{padding:10px 14px;overflow-x:hidden;overflow-y:auto}
 .ctl.mc .rb.big svg{width:22px;height:22px}
 .ctl.mc .rf,.ctl.mc .rt{pointer-events:none}
 .ctl.mc .rb.on{background:color-mix(in srgb,var(--ac) 22%,transparent);color:var(--ac);opacity:1}
+/* ===== گزارش بارش و مجری (anchor.js) ===== */
+.an-ov{position:fixed;inset:0;z-index:9000;display:none;align-items:center;justify-content:center;background:rgba(3,5,12,.55);backdrop-filter:blur(6px)}
+.an-ov.on{display:flex;animation:anFade .25s ease}
+@keyframes anFade{from{opacity:0}to{opacity:1}}
+.an-card{width:min(760px,94vw);max-height:92vh;overflow:hidden;display:flex;flex-direction:column;border-radius:22px;color:var(--tx);background:linear-gradient(160deg,color-mix(in srgb,var(--bg,#0b0f1a) 90%,#1d3b6e),var(--bg,#0b0f1a));border:1px solid color-mix(in srgb,var(--tx) 14%,transparent);box-shadow:0 30px 80px -20px rgba(0,0,0,.6)}
+.an-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;font-weight:700;font-size:16px}
+.an-x{width:32px;height:32px;border:0;border-radius:50%;background:transparent;color:inherit;cursor:pointer;font-size:15px}
+.an-x:hover{background:color-mix(in srgb,var(--tx) 12%,transparent)}
+.an-body{display:flex;gap:16px;padding:0 18px;min-height:0}
+.an-stage{position:relative;flex:0 0 200px;height:250px;border-radius:18px;overflow:hidden;background:radial-gradient(circle at 50% 15%,#2a5a8f,#0b1830 72%)}
+.an-rain{position:absolute;inset:-60px -20px 0;opacity:0;transition:opacity .5s;background:repeating-linear-gradient(105deg,transparent 0 12px,rgba(170,225,255,.4) 12px 13px);animation:anRain .6s linear infinite}
+.an-stage.wet .an-rain{opacity:.9}
+@keyframes anRain{to{transform:translate(-12px,24px)}}
+.an-pres{position:absolute;left:50%;bottom:0;width:170px;transform:translateX(-50%);animation:anBob 2.4s ease-in-out infinite}
+@keyframes anBob{0%,100%{transform:translateX(-50%)}50%{transform:translate(-50%,-6px)}}
+.an-pres svg{width:100%;height:auto;display:block}
+.an-blink{transform-box:fill-box;transform-origin:center;animation:anBlink 4s infinite}
+@keyframes anBlink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+.an-side{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.an-bubble{flex:1;min-height:160px;padding:16px 18px;border-radius:18px;font-size:15px;line-height:1.9;background:color-mix(in srgb,var(--tx) 8%,transparent);border:1px solid color-mix(in srgb,var(--tx) 14%,transparent)}
+.an-note{font-size:12px;opacity:.7;min-height:16px}
+.an-tl{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:16px 18px 8px}
+.an-cell{--c:#6b7280;padding:10px 2px;border-radius:14px;text-align:center;background:color-mix(in srgb,var(--c) 22%,transparent);border:1px solid color-mix(in srgb,var(--c) 50%,transparent)}
+.an-cell.c-light{--c:#38bdf8}.an-cell.c-mid{--c:#2563eb}.an-cell.c-heavy{--c:#7c3aed}.an-cell.c-snow{--c:#cbd5e1}.an-cell.c-storm{--c:#facc15}
+.an-cell b{display:block;font-size:12px}
+.an-cell i{display:block;font-style:normal;font-size:20px;margin:4px 0}
+.an-cell small{font-size:11px;opacity:.85}
+.an-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 18px 16px}
+.an-btn,.an-sel{height:34px;padding:0 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--tx) 18%,transparent);background:color-mix(in srgb,var(--tx) 8%,transparent);color:var(--tx);font:inherit;font-size:13px;cursor:pointer}
+.an-btn:hover,.an-sel:hover{background:color-mix(in srgb,var(--tx) 16%,transparent)}
+@media (max-width:620px){.an-body{flex-direction:column}.an-stage{flex:none;width:100%;height:190px}.an-tl{grid-template-columns:repeat(3,1fr)}}
