@@ -1,9 +1,9 @@
 {
   "name": "sen-launcher",
-  "version": "1.0.0",
-  "description": "SEN Launcher - customizable Windows application launcher",
+  "version": "2.0.0",
+  "description": "DEXORA - All-in-one Windows 11 Smart Workspace & Launcher",
   "main": "main.js",
-  "author": "SEN",
+  "author": "DEXORA",
   "license": "MIT",
   "scripts": {
     "icon": "python scripts/make_icon.py",
@@ -20,7 +20,7 @@
   },
   "build": {
     "appId": "com.sen.launcher",
-    "productName": "SEN Launcher",
+    "productName": "DEXORA",
     "directories": {
       "output": "dist"
     },
@@ -46,7 +46,7 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "perMachine": false,
-      "artifactName": "SEN-Launcher-Setup-${version}.${ext}",
+      "artifactName": "DEXORA-Setup-${version}.${ext}",
       "include": "build/installer.nsh"
     },
     "asarUnpack": [
